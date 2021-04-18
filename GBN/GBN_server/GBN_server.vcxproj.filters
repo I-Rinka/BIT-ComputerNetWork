@@ -20,10 +20,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\GBN_Core.cpp">
+    <ClCompile Include="GBN_Server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="GBN_Server.cpp">
+    <ClCompile Include="..\GBN_Core.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

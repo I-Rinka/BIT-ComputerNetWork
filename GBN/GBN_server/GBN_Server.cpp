@@ -19,13 +19,14 @@ int Send(const char* buffer, int length)
 		len[i] = *(cursor + i);
 	}
 	printf("send size: %d", length);
-	GBN->Core_Send(len, 4);
-	return GBN->Core_Send(buffer, length);
+	//GBN->Core_Send(len, 4);
+	//return GBN->Core_Send(buffer, length);
+	return 0;
 }
 int Receive(char* buffer, int length)
 {
 	char len[5] = { 0 };
-	GBN->Core_Receive(len, 4);
+	//GBN->Core_Receive(len, 4);
 	int size = 0;
 	char* cursor = (char*)&size;
 	for (int i = 0; i < 4; i++)
@@ -33,7 +34,8 @@ int Receive(char* buffer, int length)
 		 *(cursor + i)= len[i];
 	}
 	printf("receive size: %d",size);
-	return GBN->Core_Receive(buffer,length);
+	//return GBN->Core_Receive(buffer,length);
+	return 1;
 }
 
 int main(int argc, char* argv[])
