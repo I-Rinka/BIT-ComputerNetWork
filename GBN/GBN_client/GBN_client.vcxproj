@@ -139,7 +139,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="client_demo.cpp" />
+    <ClCompile Include="GBN_Client.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\GBN_Core.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

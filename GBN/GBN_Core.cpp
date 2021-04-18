@@ -27,91 +27,46 @@ public:
 
 
 private:
-	int crc_divisor = 0x7D;//they live in 7D so I try to make them happy :)
+	int crc_divisor = 0x7D;//They live in 7D so I try to make them happy :)
+	bool is_passive = false;// Server is passive connection.
 	WSADATA wsaData;
 	SOCKET connectSocket = INVALID_SOCKET;
-
+	SOCKADDR_IN clnt_addr;
 	//client side
-	struct addrinfo* result = NULL, * ptr = NULL, hints;
+
 
 	int iResult;//socket connection result
 };
 
 ESCPP_GBN::ESCPP_GBN(const char* port)
 {
-	WSADATA wsa_data;
-	SOCKET serv_sock;
-
-	int clnt_addr_size;
-
-	SOCKADDR_IN serv_addr, clnt_addr;
-
-	// Initialize Winsock
+	this->is_passive = true; // This is a Server
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != 0) {
 		printf("WSAStartup failed with error: %d\n", iResult);
 		//some throw?
 	}
+	
+	//this->connectSocket 
+	SOCKET fd_socket;
+	fd_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
+	this->connectSocket = fd_socket;
 
-	//initialize UDP information
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_protocol = IPPROTO_UDP;
-	hints.ai_flags = AI_PASSIVE;
+	SOCKADDR_IN server_addr;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(atoi(port));
+	server_addr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+	
+	//bind socket
+	bind(this->connectSocket, (SOCKADDR*)&server_addr, sizeof(SOCKADDR));
 
-	iResult = getaddrinfo(NULL, port, &hints, &result);//It is similar to client side, but the server is passively connected, so the ip address is NULL.
-	if (iResult != 0) {
-		printf("getaddrinfo failed: %d\n", iResult);
-		WSACleanup();
-	}
-
-	SOCKET listenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);//The result contains the infomation such as ip or port that socket need which is from the getaddrinfo(), and getaddrinfo() stores the socket's protocol infomation.
-	//this->connectSocket
-
-	if (listenSocket == INVALID_SOCKET) {
-		printf("Error at socket(): %ld\n", WSAGetLastError());
-		freeaddrinfo(result);
-		WSACleanup();
-	}
-
-	iResult = bind(listenSocket, result->ai_addr, (int)result->ai_addrlen);
-	if (iResult == SOCKET_ERROR) {
-		printf("bind failed with error: %d\n", WSAGetLastError());
-		freeaddrinfo(result);
-		closesocket(this->connectSocket);
-		WSACleanup();
-	}
-
-	freeaddrinfo(result);// After binding, we do not need the result any more.
-
-
-	if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-		printf("Listen failed with error: %ld\n", WSAGetLastError());
-		closesocket(listenSocket);
-		WSACleanup();
-		//some throw?
-	}
-
-	// Accept a client socket
-	this->connectSocket = accept(listenSocket, NULL, NULL); // In our recent implementation, there is only one client per server. So we implements it in this way.
-	// However, if it is necessary in future, we can add some queue for the connect socket so the connectSocket can connect multiple server
-	if (this->connectSocket == INVALID_SOCKET) {
-		printf("accept failed with error: %d\n", WSAGetLastError());
-		closesocket(this->connectSocket);
-		WSACleanup();
-		//some throw?
-	}
-
-	closesocket(listenSocket);// The server socket will never be used if we get the information of clients
-
-	// Then we can use recv() or send as ususal.
-
-	WSACleanup();
 }
 ESCPP_GBN::ESCPP_GBN(const char* target_ip, const char* port)
 {
+	struct addrinfo* result = NULL, * ptr = NULL;
+	struct addrinfo hints;
+
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != 0) {
@@ -129,7 +84,6 @@ ESCPP_GBN::ESCPP_GBN(const char* target_ip, const char* port)
 	iResult = getaddrinfo(target_ip, port, &hints, &result);
 	if (iResult != 0) {
 		printf("getaddrinfo failed with error: %d\n", iResult);
-		WSACleanup();
 		//some throw?
 	}
 
@@ -140,7 +94,6 @@ ESCPP_GBN::ESCPP_GBN(const char* target_ip, const char* port)
 		this->connectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 		if (this->connectSocket == INVALID_SOCKET) {
 			printf("socket failed with error: %ld\n", WSAGetLastError());
-			WSACleanup();
 			//some throw?
 		}
 
@@ -158,11 +111,13 @@ ESCPP_GBN::ESCPP_GBN(const char* target_ip, const char* port)
 }
 ESCPP_GBN::~ESCPP_GBN()
 {
-	iResult = shutdown(this->connectSocket, SD_SEND);
+	if (!this->is_passive)
+	{
+		iResult = shutdown(this->connectSocket, SD_SEND);// Client will shutdown the socket connection
+	}
+
 	if (iResult == SOCKET_ERROR) {
 		printf("shutdown failed with error: %d\n", WSAGetLastError());
-		closesocket(this->connectSocket);
-		WSACleanup();
 		//some throw?
 	}
 	closesocket(this->connectSocket);
@@ -171,22 +126,36 @@ ESCPP_GBN::~ESCPP_GBN()
 
 int ESCPP_GBN::Core_Send(const char* message, int send_length)
 {
+	int iSendResult = -1;
 	if (send_length > this->packet_lenth)
 	{
 		send_length = packet_lenth;
 	}
-	int iSendResult = send(this->connectSocket, message, send_length, 0);
-	if (iSendResult == SOCKET_ERROR) {
-		printf("send failed with error: %d\n", WSAGetLastError());
-		/*	closesocket(this->connectSocket);
-			WSACleanup();*/
-		return -1;
+	if (this->is_passive)
+	{
+		int	clnt_addr_size = sizeof(this->clnt_addr);
+		iResult = sendto(this->connectSocket, message, packet_lenth, 0, (SOCKADDR*)&clnt_addr, clnt_addr_size);
 	}
-	return 0;
+	else
+	{
+		iSendResult = send(this->connectSocket, message, send_length, 0);
+	}
+	return iSendResult;
 }
 
 int ESCPP_GBN::Core_Receive(char* message, int buffer_length)
 {
-	int iResult = recv(this->connectSocket, message, buffer_length, 0);
+	int iResult = -1;
+	if (this->is_passive)
+	{
+		// Server is passively connected, so it gets the data from the server
+		int	clnt_addr_size = sizeof(this->clnt_addr);
+		iResult = recvfrom(this->connectSocket, message, buffer_length, 0, (SOCKADDR*)&clnt_addr, &clnt_addr_size);
+	}
+	else
+	{
+		iResult = recv(this->connectSocket, message, buffer_length, 0);
+
+	}
 	return iResult;
 }
