@@ -15,6 +15,7 @@ inline int ESCPP_GBN::Send(const char* buffer, int send_length)
 	
 	//WaitForSingleObject(this->send_queue_mutex, INFINITE);
 	char* frame = this->void_queue.front();
+	this->send_frame_next = frame;
 	ZeroMemory(frame, this->packet_length + this->header_length);
 
 	this->void_queue.pop();
@@ -33,13 +34,16 @@ inline int ESCPP_GBN::Send(const char* buffer, int send_length)
 
 	//ReleaseMutex(this->send_queue_mutex);
 
-	ReleaseSemaphore(this->send_queue_full, 1, NULL);
+	ReleaseSemaphore(this->send_queue_full, 1, NULL);//让send线程可以发
 
 	return 0;
 }
-//待完成
+
 inline int ESCPP_GBN::Recv(char* buffer)
 {
+	WaitForSingleObject(this->recv_buffer_mutex,INFINITE);
+	strcpy(buffer, this->recv_buffer);
+
 	return 0;
 }
 
@@ -120,7 +124,7 @@ void ESCPP_GBN::RecvThread()
 							send_queue.pop_front();
 
 							//弹出时间戳队列
-							this->time_stamp_queue.pop_back();
+							this->time_stamp_queue.pop_front();
 
 							ack[ack_frame] = false;//窗口已后移，ack置false
 							//ReleaseSemaphore(this->send_queue_empty, 1, NULL);//先释放一个empty再释放队列
@@ -242,11 +246,35 @@ void ESCPP_GBN::RecvThread()
 //待完成
 void ESCPP_GBN::SendThread()
 {
-	//怎么样才能保证每一次送的帧一定是队列的下一帧呢？（因为队列也在动，是否需要迭代器？
 	while (true)
 	{
 		WaitForSingleObject(this->send_queue_full,INFINITE);
+		WaitForSingleObject(this->send_mutex, INFINITE);
+		this->Core_Send(this->send_frame_next, this->GetLengthNumber(this->send_frame_next));
+		ReleaseMutex(this->send_mutex);
+	}
+}
 
+void ESCPP_GBN::TimerThread()
+{
+	while (true)
+	{
+		this->timer_time_stamp = GetTickCount64();
+		if (!this->time_stamp_queue.empty())
+		{
+			if (this->time_stamp_queue.front() - this->timer_time_stamp <= this->expire_timer / 2)
+			{
+				//重发
+				if (!this->send_queue.empty())
+				{
+					char* frame = this->send_queue.front();
+					WaitForSingleObject(this->send_mutex, INFINITE);
+					this->Core_Send(frame, this->GetLengthNumber(frame));
+					ReleaseMutex(this->send_mutex);
+				}
+			}
+		}
+		Sleep(this->expire_timer / 2);
 	}
 }
 
@@ -272,6 +300,10 @@ inline void ESCPP_GBN::CoreInitializer()
 
 	this->send_thread = new std::thread([this]() {SendThread();});
 	this->send_thread->detach();
+
+	this->timer_time_stamp = GetTickCount64();
+	this->timer_thread = new std::thread([this]() {TimerThread();});
+	this->timer_thread->detach();
 }
 
 // Don't care about what I have wrote here (unless it crashes at there

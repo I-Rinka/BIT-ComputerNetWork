@@ -35,7 +35,8 @@ public:
 	int Recv(char* buffer);
 
 	std::thread* send_thread;
-	std::thread *recv_thread;
+	std::thread* recv_thread;
+	std::thread* timer_thread;
 
 private:
 	void CoreInitializer();
@@ -60,6 +61,7 @@ private:
 	//client side
 
 	std::deque<unsigned long long>time_stamp_queue;
+	unsigned long long timer_time_stamp;
 
 	std::deque<char*>send_queue;
 	std::queue<char*>void_queue;
@@ -70,6 +72,7 @@ private:
 	int send_frame_number = 0;// This maximum size should be window_size*2
 	int recv_require_frame_number = 0;
 	
+	char* send_frame_next = NULL;
 
 	int iResult;//socket connection result
 
@@ -93,6 +96,7 @@ private:
 
 	void RecvThread();
 	void SendThread();
+	void TimerThread();
 
 	//time out: only send has a timer. When the timer expires, sender would resend all the frames in the queue.
 
