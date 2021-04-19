@@ -59,15 +59,17 @@ private:
 	SOCKADDR_IN clnt_addr;
 	//client side
 
+	std::deque<unsigned long long>time_stamp_queue;
+
 	std::deque<char*>send_queue;
 	std::queue<char*>void_queue;
 	bool ack[ESCPP_GBN::window_size] = { false };
-
 	
 	char* recv_buffer = NULL;
 
 	int send_frame_number = 0;// This maximum size should be window_size*2
-	int recv_require_frame = 0;
+	int recv_require_frame_number = 0;
+	
 
 	int iResult;//socket connection result
 
@@ -75,6 +77,7 @@ private:
 	HANDLE send_queue_mutex;
 	HANDLE send_queue_full;
 	HANDLE send_queue_empty;
+	HANDLE recv_buffer_semaphore;// I think using semaphore would be better, maybe future the recv_buffer can using queue to store multiple message
 	HANDLE recv_buffer_mutex;
 
 	void AppendFrameNumber(char* buffer, int frame_number);

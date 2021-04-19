@@ -10,45 +10,25 @@
 
 ESCPP_GBN* GBN;
 
-int Send(const char* buffer, int length)
-{
-	char len[4] = { 0 };
-	char* cursor = (char*)&length;
-	for (int i = 0; i < 4; i++)
-	{
-		len[i] = *(cursor + i);
-	}
-	printf("send size: %d", length);
-	//GBN->Core_Send(len, 4);
-	//return GBN->Core_Send(buffer, length);
-	return 0;
-}
-int Receive(char* buffer, int length)
-{
-	char len[5] = { 0 };
-	//GBN->Core_Receive(len, 4);
-	int size = 0;
-	char* cursor = (char*)&size;
-	for (int i = 0; i < 4; i++)
-	{
-		 *(cursor + i)= len[i];
-	}
-	printf("receive size: %d",size);
-	//return GBN->Core_Receive(buffer,length);
-	return 1;
-}
 
 int main(int argc, char* argv[])
 {
 	GBN = new ESCPP_GBN(PORT);
+	char buffer[ESCPP_GBN::packet_length];
+
+	std::thread th([&]() {
+		char send_buffer[ESCPP_GBN::packet_length] = { 0 };
+		while(true)
+		{
+			scanf_s("%s", buffer, ESCPP_GBN::packet_length);
+			GBN->Send(send_buffer,strlen(send_buffer));
+		}
+		});
 
 	while (1)
 	{
-		char buffer[21] = { 0 };
-		Receive(buffer, 20);
+		int len=GBN->Recv(buffer);
 		printf("%s", buffer);
-		const char* str = "Hello Client, I am a Server! ";
-		Send(str, strlen(str));
 	}
 
 	delete GBN;
