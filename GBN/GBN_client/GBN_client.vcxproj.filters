@@ -15,12 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GBN_Client.cpp">
+    <ClCompile Include="Client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\GBN_Core.h">
+    <ClInclude Include="..\UDP_Core.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ESCPP.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Frame.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

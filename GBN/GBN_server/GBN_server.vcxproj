@@ -19,11 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\GBN_Core.h" />
+    <ClInclude Include="..\ESCPP.h" />
+    <ClInclude Include="..\UDP_Core.h" />
+    <ClInclude Include="frame.h" />
+    <ClInclude Include="GBN_config.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\GBN_Core.cpp" />
-    <ClCompile Include="GBN_Server.cpp" />
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
