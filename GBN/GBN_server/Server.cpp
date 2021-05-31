@@ -1,59 +1,54 @@
+#include <stdio.h>   
 #include <Winsock2.h>   
-#include <stdio.h>
-#include <thread>
+#include <Ws2tcpip.h>
+#include <string.h>
 #include<iostream>
-#include"..\UDP_Core.h"
-#include"../ESCPP.h"
-#pragma warning(disable:4996)
+#include<stdlib.h>
+#include <thread>
+#include"../UDP_Core.h"
+#include"..\ESCPP.h"
+
 #pragma comment(lib,"Ws2_32.lib")//连接Sockets相关库  
-
-int GetMsg(UDP_Socket* sock)
-{
-	char buffer[1001];
-	while (true)
-	{
-		int rd = (int)sock->ReciveFrom(buffer, sizeof(buffer) - 1);
-		if (rd > 0)
-		{
-			buffer[rd] = 0;
-			printf("%s\n", buffer);
-		}
-		//buffer[rd] = 0;
-	}
-	return 0;
-}
-
-
 
 int main()
 {
+
+	printf("=========================================================\n");
+	printf("                      ESCPP  服务器端\n");
+	printf("=========================================================\n");
+
+	printf("请输入要监听的端口号:\n");
+	int port;
+	std::cin >> port;
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 1), &wsaData)) //初始化  
 	{
 		printf("Winsock无法初始化!\n");
 		WSACleanup();
-		return 1;
+		return 0;
 	}
-	printf("服务器开始创建SOCKET。\n");
 
-	char buffer[1000];
+	UDP_Socket* sock = new UDP_Socket(port);
 
-	UDP_Socket* sock = new UDP_Socket(23333);
+	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\server_recv.tmp");});
 
-	const char* file_name = "C:\\Users\\I_Rin\\Desktop\\RISCV_temp.docx";
+	int operate = 0;
 
-	//std::thread* th = new std::thread([&]() {GetFile(file_name, sock);});
-	std::thread* th = new std::thread([&]() {GetFile(file_name, sock);});
-
-	while (true)
+start:
+	printf("请输入操作:\n0:退出	1:发送文件\n");
+	std::cin >> operate;
+	switch (operate)
 	{
-		getchar();
-		PutFile("C:\\Users\\I_Rin\\Desktop\\test.md", sock);
+	case 0:
+		break;
+	case 1:
+		Mode_SendFile(sock);
+		goto start;
+	default:
+		break;
 	}
-	//const char* file_name2 = "C:\\Users\\I_Rin\\Desktop\\test.md";
-	//PutFile(file_name2, sock);
-	th->join();
-
+	//取消守护进程 
 
 	WSACleanup();
+	return 0;
 }

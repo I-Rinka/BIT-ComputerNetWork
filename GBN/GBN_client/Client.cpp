@@ -9,26 +9,18 @@
 #include"..\ESCPP.h"
 #pragma comment(lib,"Ws2_32.lib")//连接Sockets相关库  
 
-int GetMsg(UDP_Socket* sock)
-{
-	Sleep(1000);
-	char buffer[1001];
-	while (true)
-	{
-		int rd = (int)sock->ReciveFrom(buffer, sizeof(buffer) - 1);
-		if (rd > 0)
-		{
-			buffer[rd - 1] = 0;
-			printf("%s\n", buffer);
-		}
-		//buffer[rd] = 0;
-	}
-	return 0;
-}
-
-
 int main()
 {
+	printf("=========================================================\n");
+	printf("                      ESCPP  客户端\n");
+	printf("=========================================================\n");
+
+	char ip[40]="127.0.0.1";
+	//printf("请输入要连接的服务器地址:\n");
+	//fgets(ip, 39, stdin);
+	printf("请输入目标端口号:\n");
+	int port;
+	std::cin >> port;
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 1), &wsaData)) //初始化  
 	{
@@ -36,25 +28,27 @@ int main()
 		WSACleanup();
 		return 0;
 	}
-	printf("客户端开始创建SOCKET。\n");
 
-	UDP_Socket* sock = new UDP_Socket("127.0.0.1", 23333);
+	UDP_Socket* sock = new UDP_Socket(ip, port);
 
-	const char* file_name = "C:\\Users\\I_Rin\\Desktop\\RISCV.docx";
-	//std::thread* th = new std::thread([&]() {PutFile(file_name, client);});
-	char buffer[1001];
-	std::thread* th = new std::thread([&]() {GetFile("C:\\Users\\I_Rin\\Desktop\\test_tmp.md", sock);});
+	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\client_recv.tmp");});
 
-	while (true)
+	int operate = 0;
+
+start:
+	printf("请输入操作:\n0:退出	1:发送文件\n");
+	std::cin >> operate;
+	switch (operate)
 	{
-		getchar();
-		PutFile(file_name, sock);
+	case 0:
+		break;
+	case 1:
+		Mode_SendFile(sock);
+		goto start;
+	default:
+		break;
 	}
-
-
-	//const char* file_name2 = "C:\\Users\\I_Rin\\Desktop\\test_temp.md";
-	//GetFile(file_name2, client);
-	th->join();
+	//取消守护进程 
 
 	WSACleanup();
 	return 0;
