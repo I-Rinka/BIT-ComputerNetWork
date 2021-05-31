@@ -1,5 +1,5 @@
 #pragma once
-void InvertUint8(unsigned char* origin, unsigned char* dest)
+void InvertUint8(unsigned char *origin, unsigned char *dest)
 {
     unsigned char a = *origin;
     unsigned char one = 0x01;
@@ -12,7 +12,7 @@ void InvertUint8(unsigned char* origin, unsigned char* dest)
     }
     *dest = ans;
 }
-void InvertUint16(unsigned short* origin, unsigned short* dest)
+void InvertUint16(unsigned short *origin, unsigned short *dest)
 {
     unsigned short a = *origin;
     unsigned short one = 0x0001;
@@ -25,7 +25,7 @@ void InvertUint16(unsigned short* origin, unsigned short* dest)
     }
     *dest = ans;
 }
-unsigned short CRC16_CCITT(unsigned char* data, unsigned int data_len)
+unsigned short CRC16_CCITT(unsigned char *data, unsigned int data_len)
 {
     unsigned short ans = 0x0000;
     unsigned short CRC_poly = 0x1021;
@@ -47,7 +47,7 @@ unsigned short CRC16_CCITT(unsigned char* data, unsigned int data_len)
     InvertUint16(&ans, &ans);
     return (ans);
 }
-bool VerifyCRC_CCITT(unsigned char* data, unsigned int data_len)
+bool VerifyCRC_CCITT(unsigned char *data, unsigned int data_len)
 {
     unsigned short ans = 0x0000;
     unsigned short CRC_poly = 0x1021;
@@ -86,55 +86,54 @@ public:
         frame,
         ack,
         exit,
-        resend //保留值
+        resend
     };
 
     int data_len = 0;
     int total_len = 0;
-    char* head;
+    char *head;
     unsigned short mark = 0;
     void AppendLabel(unsigned short label)
     {
-        unsigned short* lp = (unsigned short*)(head + opcode_byte_len);
+        unsigned short *lp = (unsigned short *)(head + opcode_byte_len);
         *(lp) = label;
     }
     unsigned short GetLabel()
     {
-        //小端法
-        unsigned short* lp = (unsigned short*)(head + opcode_byte_len);
+        unsigned short *lp = (unsigned short *)(head + opcode_byte_len);
         return (*lp);
     }
     void AppendOPCode(int OP)
     {
-        unsigned short* lp = (unsigned short*)(head);
+        unsigned short *lp = (unsigned short *)(head);
         *lp = (unsigned short)OP;
     }
     unsigned short GetOPCode()
     {
-        unsigned short* lp = (unsigned short*)(head);
+        unsigned short *lp = (unsigned short *)(head);
         return *lp;
     }
-    char* GetDataAddr()
+    char *GetDataAddr()
     {
         return head + this->header_byte_len;
     }
     void AppendCRC16()
     {
-        unsigned short CRC_num = CRC16_CCITT((unsigned char*)this->head, header_byte_len + data_len);
-        *(unsigned short*)(this->head + header_byte_len + data_len) = CRC_num;
+        unsigned short CRC_num = CRC16_CCITT((unsigned char *)this->head, header_byte_len + data_len);
+        *(unsigned short *)(this->head + header_byte_len + data_len) = CRC_num;
     }
     bool VerifyCRC()
     {
-        return VerifyCRC_CCITT((unsigned char*)this->head, header_byte_len + data_len + 2);
+        return VerifyCRC_CCITT((unsigned char *)this->head, header_byte_len + data_len + 2);
     }
     unsigned short GetCRCNum()
     {
-        return *((unsigned short*)(head + data_len + header_byte_len));
+        return *((unsigned short *)(head + data_len + header_byte_len));
     }
     int PutDataLen(int frame_len)
     {
         total_len = frame_len;
-        data_len = (frame_len - header_byte_len - 2); //去头和去尾
+        data_len = (frame_len - header_byte_len - 2); //
         return data_len;
     }
 
@@ -165,18 +164,22 @@ public:
         }
         AppendCRC16();
     }
+    int GetDataLen()
+    {
+        return this->data_len;
+    }
 
-    Frame(char* buffer);
-    Frame(char* buffer, int data_len);
+    Frame(char *buffer);
+    Frame(char *buffer, int data_len);
     ~Frame();
 };
 
-Frame::Frame(char* buffer)
+Frame::Frame(char *buffer)
 {
     this->head = buffer;
 }
 
-Frame::Frame(char* buffer, int data_len)
+Frame::Frame(char *buffer, int data_len)
 {
     this->data_len = data_len;
     this->head = buffer;
