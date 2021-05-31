@@ -2,6 +2,8 @@
 #include <Winsock2.h>
 #include<Ws2tcpip.h>
 #include<Windows.h>
+#include"Frame.h"
+#define BUFFER_SIZE 1000
 #pragma comment(lib,"Ws2_32.lib")
 class UDP_Socket
 {
@@ -17,12 +19,20 @@ public:
 		//ReleaseMutex(this->socket_rw_mutex);
 		return rt_val;
 	}
+	int ReciveFrom(Frame& f)
+	{
+		return this->ReciveFrom(f.head, BUFFER_SIZE);
+	}
 	int SendTo(char* buffer, int buffer_size)
 	{
 		//WaitForSingleObject(this->socket_rw_mutex, 20);
 		int rt_val = sendto(rt_socket, buffer, buffer_size, 0, (struct sockaddr*)&opposite_addr, addr_size);
 		//ReleaseMutex(this->socket_rw_mutex);
 		return rt_val;
+	}
+	int SendTo(Frame& f)
+	{
+		return this->SendTo(f.head, f.total_len);
 	}
 
 private:
