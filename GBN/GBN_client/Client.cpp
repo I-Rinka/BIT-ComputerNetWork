@@ -29,6 +29,8 @@ int main()
 		return 0;
 	}
 
+	Init();
+
 	UDP_Socket* sock = new UDP_Socket(ip, port);
 
 	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\client_recv.tmp");});

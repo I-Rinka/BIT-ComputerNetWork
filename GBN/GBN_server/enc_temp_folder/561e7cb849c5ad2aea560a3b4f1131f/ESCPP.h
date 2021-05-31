@@ -106,7 +106,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 			{
 				//尽量在这里设计个东西，让能进入下面环节的全是通过校验的帧
 
-				if (f.VerifyCRC())
+				if (true)
 				{
 
 					switch (f.GetOPCode())
@@ -183,7 +183,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 				}
 				else
 				{
-					printf("错误帧被丢弃\n");
+					printf("帧被丢弃\n");
 				}
 			}
 			else

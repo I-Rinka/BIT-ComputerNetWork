@@ -16,7 +16,7 @@ int main()
 	printf("=========================================================\n");
 	printf("                      ESCPP  服务器端\n");
 	printf("=========================================================\n");
-
+	
 	printf("请输入要监听的端口号:\n");
 	int port;
 	std::cin >> port;
@@ -28,9 +28,11 @@ int main()
 		return 0;
 	}
 
+	Init();
+
 	UDP_Socket* sock = new UDP_Socket(port);
 
-	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\server_recv.tmp");});
+	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\server_recv.docx");});
 
 	int operate = 0;
 
