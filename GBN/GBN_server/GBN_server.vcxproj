@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Config.h" />
     <ClInclude Include="..\ESCPP.h" />
-    <ClInclude Include="..\UDP_Core.h" />
-    <ClInclude Include="frame.h" />
-    <ClInclude Include="GBN_config.h" />
+    <ClInclude Include="..\Frame.h" />
+    <ClInclude Include="..\UDP_Socket.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

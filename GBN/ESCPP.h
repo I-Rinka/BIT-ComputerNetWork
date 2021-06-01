@@ -1,6 +1,7 @@
 #pragma once
-#include"UDP_Core.h"
+#include "Config.h"
 #include "Frame.h"
+#include "UDP_Socket.h"
 #include <stdio.h>
 #include <deque>
 #include <string.h>
@@ -11,20 +12,16 @@
 #include <string>
 #include <time.h>
 
-#define WINDOW_SIZE 5
-#define LABEL_MAX_SIZE (WINDOW_SIZE*2)
-
 int SEND_LABEL = 0;
 
 std::mutex WindowMutex;
 
 Frame SendWindow[WINDOW_SIZE];
 bool isACK[WINDOW_SIZE] = { true };
-char SendBuffer[WINDOW_SIZE][BUFFER_SIZE];
+char SendBuffer[WINDOW_SIZE][MAX_FRAME];
 clock_t timeStamp[WINDOW_SIZE];
 
 std::deque<Frame*> data_queue;
-
 
 void Init()
 {
@@ -35,6 +32,7 @@ void Init()
 	}
 
 }
+
 class Semaphore
 {
 public:
@@ -62,7 +60,6 @@ private:
 	std::condition_variable cv_;
 	int count_;
 };
-Semaphore Full(0);
 Semaphore Empty(WINDOW_SIZE);
 
 void P_Empty()
@@ -78,7 +75,7 @@ void Timer_Thread(UDP_Socket* sock)
 {
 	while (true)
 	{
-		Sleep(1000);
+		Sleep(Timeout);
 		WindowMutex.lock();
 		for (int i = 0; i < WINDOW_SIZE; i++)
 		{
@@ -100,10 +97,10 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 	{
 		errno_t err;
 		FILE* fd = NULL;
-		char buffer[BUFFER_SIZE];
+		char buffer[MAX_FRAME];
 		Frame f(buffer);
 		int file_first = 0;
-		int LABEL_expected = 0;
+		int LABEL_expected = InitSeqNo;
 		int read_len = 0;
 		const char* file_name = file_default_path;
 		while (true)
@@ -137,27 +134,25 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 							else
 							{
 								fwrite(f.GetDataAddr(), sizeof(char), f.GetDataLen(), fd);
-
 								//printf("发送ACK帧..\n");
-								//ACK
-								char ack[10];
+								char ack[10];//ACK
 								Frame f(ack);
 								f.InitFrameStruct(Frame::ack, LABEL_expected, 0);
 								sock->SendTo(f);
 							}
 
 							LABEL_expected = (LABEL_expected + 1) % LABEL_MAX_SIZE; //任何通过校验的帧，都算成功
+
 							//结束
-							if (read_len < BUFFER_SIZE)
+							if (read_len < MAX_FRAME)
 							{
-								//break;
 								printf("File Get OK\n");
 								if (fd != NULL)
 								{
 									fclose(fd);
 								}
 								file_first = 0;
-								LABEL_expected = 0;
+								LABEL_expected = InitSeqNo;
 							}
 
 						}
@@ -205,8 +200,8 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 
 void Mode_SendFile(UDP_Socket* sock)
 {
-	SEND_LABEL = 0;
-	int max_payload_len = BUFFER_SIZE - Frame::header_byte_len - 2;
+	SEND_LABEL = InitSeqNo;
+	int max_payload_len = MAX_FRAME - Frame::header_byte_len - 2;
 
 	char file_name[200];
 	printf("请输入要传输的文件路径:\n");

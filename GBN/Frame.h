@@ -1,5 +1,5 @@
 #pragma once
-#define BUFFER_SIZE 65500
+#include"Config.h"
 void InvertUint8(unsigned char* origin, unsigned char* dest)
 {
 	unsigned char a = *origin;

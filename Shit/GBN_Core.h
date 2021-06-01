@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <winsock2.h>
-#include<Windows.h>
+#include <Windows.h>
 #include <Ws2tcpip.h>
 #include<iostream>
 #include <vector>
-#include<queue>
-#include<thread>
+#include <queue>
+#include <thread>
 #pragma comment(lib,"ws2_32.lib")
 
 

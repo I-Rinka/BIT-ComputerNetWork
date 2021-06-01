@@ -5,7 +5,7 @@
 #include<iostream>
 #include<stdlib.h>
 #include <thread>
-#include"../UDP_Core.h"
+#include"..\UDP_Socket.h"
 #include"..\ESCPP.h"
 #pragma comment(lib,"Ws2_32.lib")//连接Sockets相关库  
 

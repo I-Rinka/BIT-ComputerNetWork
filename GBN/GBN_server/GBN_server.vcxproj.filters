@@ -15,16 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="frame.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="GBN_config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\UDP_Core.h">
+    <ClInclude Include="..\UDP_Socket.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\ESCPP.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Frame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Config.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
