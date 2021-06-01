@@ -33,6 +33,15 @@ int main()
 
 	UDP_Socket* sock = new UDP_Socket(ip, port);
 
+	int iMode = 0; 
+	ioctlsocket(sock->rt_socket, FIONBIO, (u_long FAR*) & iMode);//×èÈûÉèÖÃ
+
+	char tmp_buffer[10];
+	Frame connect_frame;
+	connect_frame.head = tmp_buffer;
+	connect_frame.InitFrameStruct(Frame::connect, 1, 0);
+	sock->SendTo(connect_frame);
+	
 	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\client_recv.tmp");});
 
 	int operate = 0;

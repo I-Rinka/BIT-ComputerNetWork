@@ -10,13 +10,15 @@
 
 #pragma comment(lib,"Ws2_32.lib")//连接Sockets相关库  
 
+extern Semaphore isConnect;
+
 int main()
 {
 
 	printf("=========================================================\n");
 	printf("                      ESCPP  服务器端\n");
 	printf("=========================================================\n");
-	
+
 	printf("请输入要监听的端口号:\n");
 	int port;
 	std::cin >> port;
@@ -33,11 +35,13 @@ int main()
 	UDP_Socket* sock = new UDP_Socket(port);
 
 	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\server_rcv.mp4");});
-
+	
 	int operate = 0;
 
+	isConnect.Wait();
+
 start:
-	printf("请输入操作:\n0:退出	1:发送文件\n");
+	printf("有客户端连接\n请输入操作:\n0:退出	1:发送文件\n");
 	std::cin >> operate;
 	switch (operate)
 	{
@@ -49,7 +53,7 @@ start:
 	default:
 		break;
 	}
-	//取消守护进程 
+
 
 	WSACleanup();
 	return 0;

@@ -76,7 +76,7 @@ void Timer_Thread(UDP_Socket* sock)
 {
 	while (true)
 	{
-		Sleep(Timeout/2);
+		Sleep(Timeout / 2);
 		WindowMutex.lock();
 		for (int i = 0; i < WINDOW_SIZE; i++)
 		{
@@ -84,12 +84,14 @@ void Timer_Thread(UDP_Socket* sock)
 			{
 				printf("帧%d重传\n", SendWindow[i].GetLabel());
 				sock->SendTo(SendWindow[i]);
-				Sleep(Timeout/(2*WINDOW_SIZE));
+				Sleep(Timeout / (2 * WINDOW_SIZE));
 			}
 		}
 		WindowMutex.unlock();
 	}
 }
+
+Semaphore isConnect(0);
 
 void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 {
@@ -197,6 +199,9 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 						break;
 					case Frame::exit:
 						break;
+					case Frame::connect:
+						isConnect.Signal();
+						break;
 					default:
 						break;
 					}
@@ -208,7 +213,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 			}
 			else
 			{
-
+				printf("Socket什么也没读入...\n");
 			}
 		}
 	}

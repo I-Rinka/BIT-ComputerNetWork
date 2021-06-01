@@ -10,6 +10,7 @@ public:
 	UDP_Socket(int port);
 	UDP_Socket(const char* target_ip, int port);
 	~UDP_Socket();
+	SOCKET rt_socket;
 
 	int ReciveFrom(char* buffer, int buffer_size)
 	{
@@ -32,7 +33,6 @@ public:
 
 private:
 	struct sockaddr_in opposite_addr;//客户端地址相关结构体  
-	SOCKET rt_socket;
 	WSADATA wsaData;
 	int addr_size = sizeof(opposite_addr);
 

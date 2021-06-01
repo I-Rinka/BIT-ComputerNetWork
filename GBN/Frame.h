@@ -90,7 +90,8 @@ public:
 		frame,
 		ack,
 		exit,
-		resend
+		resend,
+		connect
 	};
 
 	int data_len = 0;
@@ -165,6 +166,12 @@ public:
 		else if (OP_code == resend)
 		{
 			AppendLabel(frame_label);
+		}
+		else if (OP_code == connect)
+		{
+			AppendLabel(frame_label);
+			this->total_len = this->header_byte_len + 2;
+			this->data_len = 0;
 		}
 		AppendCRC16();
 	}
