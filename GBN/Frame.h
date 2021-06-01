@@ -50,6 +50,7 @@ unsigned short CRC16_CCITT(unsigned char* data, unsigned int data_len)
 	InvertUint16(&ans, &ans);
 	return (ans);
 }
+
 bool VerifyCRC_CCITT(unsigned char* data, unsigned int data_len)
 {
 	unsigned short ans = 0x0000;

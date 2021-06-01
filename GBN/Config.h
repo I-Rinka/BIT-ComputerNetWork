@@ -1,12 +1,12 @@
 #pragma once
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
-#define DataSize 65500
-#define ErroDate 10
-#define LostRate 10
+#define DataSize 32768
+#define ErroRate 11
+#define LostRate 11
 #define SWSize 5
 #define InitSeqNo 0
-#define Timeout 1000
+#define Timeout 50
 
 
 #define WINDOW_SIZE SWSize

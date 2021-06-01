@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "Frame.h"
 #include "UDP_Socket.h"
+#include "Error_Emulator.h"
 #include <stdio.h>
 #include <deque>
 #include <string.h>
@@ -17,9 +18,9 @@ int SEND_LABEL = 0;
 std::mutex WindowMutex;
 
 Frame SendWindow[WINDOW_SIZE];
-bool isACK[WINDOW_SIZE] = { true };
 char SendBuffer[WINDOW_SIZE][MAX_FRAME];
 clock_t timeStamp[WINDOW_SIZE];
+bool isACK[WINDOW_SIZE] = { true };
 
 std::deque<Frame*> data_queue;
 
@@ -75,14 +76,15 @@ void Timer_Thread(UDP_Socket* sock)
 {
 	while (true)
 	{
-		Sleep(Timeout);
+		Sleep(Timeout/2);
 		WindowMutex.lock();
 		for (int i = 0; i < WINDOW_SIZE; i++)
 		{
 			if (isACK[i] == false)
 			{
-				printf("丢失帧%d重传\n", SendWindow[i].GetLabel());
+				printf("帧%d重传\n", SendWindow[i].GetLabel());
 				sock->SendTo(SendWindow[i]);
+				Sleep(Timeout/(2*WINDOW_SIZE));
 			}
 		}
 		WindowMutex.unlock();
@@ -93,6 +95,9 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 {
 	Init();
 	std::thread* th = new std::thread([&]() {Timer_Thread(sock);});
+
+	Error_emulator ERROR_EMU;
+
 	while (true)
 	{
 		errno_t err;
@@ -106,10 +111,20 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 		while (true)
 		{
 			read_len = sock->ReciveFrom(f);
-			f.InitDataLen(read_len);
+			//客户端的这个，怎么样才能不一直循环
 
 			if (read_len > 0)
 			{
+				f.InitDataLen(read_len);
+				//接收入口
+
+				ERROR_EMU.TryMakeFrameBitsError(f); //模拟帧丢弃
+				if (ERROR_EMU.GetErrorCounter() % LostRate == 1)
+				{
+					continue;//模拟帧丢失
+				}
+
+
 				if (f.VerifyCRC())
 				{
 
@@ -134,11 +149,11 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 							else
 							{
 								fwrite(f.GetDataAddr(), sizeof(char), f.GetDataLen(), fd);
-								//printf("发送ACK帧..\n");
 								char ack[10];//ACK
 								Frame f(ack);
 								f.InitFrameStruct(Frame::ack, LABEL_expected, 0);
 								sock->SendTo(f);
+								printf("发送ACK帧%d..\n", f.GetLabel());
 							}
 
 							LABEL_expected = (LABEL_expected + 1) % LABEL_MAX_SIZE; //任何通过校验的帧，都算成功
@@ -158,19 +173,21 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 						}
 						else
 						{
-							printf("失序帧被丢弃\n");
+							printf("失序帧被丢弃,现在需要帧%d\n", LABEL_expected);
 						}
 
 						break;
 
 					case Frame::ack:
 						WindowMutex.lock();
-						//printf("帧%dAck\n", f.GetLabel());
+						printf("帧%dAck\n", f.GetLabel());
 						isACK[f.GetLabel() % WINDOW_SIZE] = true;//可以再增加一个取消之前的ACK的功能
-						for (int i = 0; i < f.GetLabel() % WINDOW_SIZE; i++)
+
+						for (int i = 0; i < WINDOW_SIZE; i++)
 						{
-							if (timeStamp[i] < timeStamp[f.GetLabel() % WINDOW_SIZE]) //时间戳小的，全部也都接到了
+							if (timeStamp[i] < timeStamp[f.GetLabel() % WINDOW_SIZE] && isACK[i] == false) //时间戳小的，全部也都接到了
 							{
+								printf("帧%d也假设ACK了\n", SendWindow[i].GetLabel());
 								isACK[i] = true;
 								V_Empty();
 							}
@@ -186,7 +203,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 				}
 				else
 				{
-					printf("错误帧被丢弃\n");
+					printf("错误帧被丢弃,帧类型:%d, 帧号: %d\n", f.GetOPCode(), f.GetLabel());
 				}
 			}
 			else
@@ -196,7 +213,6 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 		}
 	}
 }
-
 
 void Mode_SendFile(UDP_Socket* sock)
 {

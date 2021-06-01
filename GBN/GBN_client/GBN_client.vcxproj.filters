@@ -29,5 +29,8 @@
     <ClInclude Include="..\Frame.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\Error_Emulator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

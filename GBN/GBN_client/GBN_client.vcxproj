@@ -22,6 +22,7 @@
     <ClCompile Include="Client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Error_Emulator.h" />
     <ClInclude Include="..\ESCPP.h" />
     <ClInclude Include="..\Frame.h" />
     <ClInclude Include="..\UDP_Core.h" />
