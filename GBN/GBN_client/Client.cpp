@@ -16,8 +16,10 @@ int main()
 	printf("=========================================================\n");
 
 	char ip[40]="127.0.0.1";
+
 	//printf("请输入要连接的服务器地址:\n");
 	//fgets(ip, 39, stdin);
+
 	printf("请输入目标端口号:\n");
 	int port;
 	std::cin >> port;
@@ -28,8 +30,6 @@ int main()
 		WSACleanup();
 		return 0;
 	}
-
-	Init();
 
 	UDP_Socket* sock = new UDP_Socket(ip, port);
 

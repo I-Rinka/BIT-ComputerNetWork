@@ -13,9 +13,30 @@
 
 #define WINDOW_SIZE 5
 #define LABEL_MAX_SIZE (WINDOW_SIZE*2)
+char memBuffer[5][BUFFER_SIZE];
+
+int SEND_LABEL = 0;
+
+std::mutex WindowMutex;
+
+Frame SendWindow[WINDOW_SIZE];
+bool isACK[WINDOW_SIZE] = { true };
+char SendBuffer[WINDOW_SIZE][BUFFER_SIZE];
+clock_t timeStamp[WINDOW_SIZE];
 
 std::deque<Frame*> data_queue;
 
+
+void Init()
+{
+
+	for (int i = 0; i < WINDOW_SIZE; i++)
+	{
+		SendWindow[i].head = SendBuffer[i];
+		isACK[i] = true;
+	}
+
+}
 class Semaphore
 {
 public:
@@ -55,17 +76,6 @@ void V_Empty()
 	Empty.Signal();
 }
 
-char memBuffer[5][BUFFER_SIZE];
-
-int SEND_LABEL = 0;
-
-std::mutex WindowMutex;
-
-Frame SendWindow[WINDOW_SIZE];
-bool isACK[WINDOW_SIZE] = { true };
-char SendBuffer[WINDOW_SIZE][BUFFER_SIZE];
-clock_t timeStamp[WINDOW_SIZE];
-
 void Timer_Thread(UDP_Socket* sock)
 {
 	while (true)
@@ -86,6 +96,7 @@ void Timer_Thread(UDP_Socket* sock)
 
 void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 {
+	Init();
 	std::thread* th = new std::thread([&]() {Timer_Thread(sock);});
 	while (true)
 	{
@@ -106,7 +117,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 			{
 				//尽量在这里设计个东西，让能进入下面环节的全是通过校验的帧
 
-				if (true)
+				if (f.VerifyCRC())
 				{
 
 					switch (f.GetOPCode())
@@ -183,7 +194,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 				}
 				else
 				{
-					printf("帧被丢弃\n");
+					printf("错误帧被丢弃\n");
 				}
 			}
 			else
@@ -194,16 +205,6 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 	}
 }
 
-void Init()
-{
-
-	for (int i = 0; i < WINDOW_SIZE; i++)
-	{
-		SendWindow[i].head = SendBuffer[i];
-		isACK[i] = true;
-	}
-
-}
 
 void Mode_SendFile(UDP_Socket* sock)
 {
@@ -256,9 +257,9 @@ void Mode_SendFile(UDP_Socket* sock)
 		{
 			break;
 		}
-		//Sleep(10);
-		//V_Full();
 	}
+
+	Init();
 
 	fclose(stream);
 }

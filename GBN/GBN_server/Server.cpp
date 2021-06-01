@@ -32,7 +32,7 @@ int main()
 
 	UDP_Socket* sock = new UDP_Socket(port);
 
-	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\server_recv.docx");});
+	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\server_rcv.mp4");});
 
 	int operate = 0;
 
