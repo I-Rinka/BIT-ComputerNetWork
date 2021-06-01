@@ -42,7 +42,7 @@ int main()
 	connect_frame.InitFrameStruct(Frame::connect, 1, 0);
 	sock->SendTo(connect_frame);
 	
-	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "C:\\Users\\I_Rin\\Desktop\\client_recv.tmp");});
+	std::thread* th = new std::thread([&]() {Daemon_Thread(sock, "client_recv.mp4");});
 
 	int operate = 0;
 
