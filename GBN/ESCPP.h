@@ -9,11 +9,10 @@
 #include <mutex>
 #include <thread>
 #include <string>
-#include<time.h>
+#include <time.h>
 
 #define WINDOW_SIZE 5
 #define LABEL_MAX_SIZE (WINDOW_SIZE*2)
-char memBuffer[5][BUFFER_SIZE];
 
 int SEND_LABEL = 0;
 
@@ -29,7 +28,6 @@ std::deque<Frame*> data_queue;
 
 void Init()
 {
-
 	for (int i = 0; i < WINDOW_SIZE; i++)
 	{
 		SendWindow[i].head = SendBuffer[i];
@@ -115,8 +113,6 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 
 			if (read_len > 0)
 			{
-				//尽量在这里设计个东西，让能进入下面环节的全是通过校验的帧
-
 				if (f.VerifyCRC())
 				{
 
@@ -150,6 +146,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 								sock->SendTo(f);
 							}
 
+							LABEL_expected = (LABEL_expected + 1) % LABEL_MAX_SIZE; //任何通过校验的帧，都算成功
 							//结束
 							if (read_len < BUFFER_SIZE)
 							{
@@ -160,9 +157,9 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 									fclose(fd);
 								}
 								file_first = 0;
+								LABEL_expected = 0;
 							}
 
-							LABEL_expected = (LABEL_expected + 1) % LABEL_MAX_SIZE; //任何通过校验的帧，都算成功
 						}
 						else
 						{
@@ -208,6 +205,7 @@ void Daemon_Thread(UDP_Socket* sock, const char* file_default_path)
 
 void Mode_SendFile(UDP_Socket* sock)
 {
+	SEND_LABEL = 0;
 	int max_payload_len = BUFFER_SIZE - Frame::header_byte_len - 2;
 
 	char file_name[200];
@@ -239,7 +237,7 @@ void Mode_SendFile(UDP_Socket* sock)
 
 		if (sock->SendTo(f) != SOCKET_ERROR)
 		{
-			//printf("发送帧:%d\n", f.GetLabel());
+			printf("发送帧:%d\n", f.GetLabel());
 			SEND_LABEL = (SEND_LABEL + 1) % LABEL_MAX_SIZE;
 		}
 		else
@@ -251,8 +249,6 @@ void Mode_SendFile(UDP_Socket* sock)
 			break;
 		}
 	}
-
-	Init();
 
 	fclose(stream);
 }
